@@ -111,10 +111,17 @@ class ProfileDrawer extends StatelessWidget {
                       title: const Text('My Profile'),
                       onTap: () {
                         Navigator.of(context).pop();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                        );
+                        if (userType == UserType.farmer) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => SalesProfile()),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                          );
+                        }
                       },
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -130,20 +137,7 @@ class ProfileDrawer extends StatelessWidget {
                       },
                       contentPadding: EdgeInsets.zero,
                     ),
-                    // --- Only show for Seller/Farmer ---
-                    if (userType == UserType.farmer)
-                      ListTile(
-                        leading: Icon(Icons.store, color: Colors.black),
-                        title: Text('My Sales'),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SalesProfileScreen()),
-                          );
-                        },
-                        contentPadding: EdgeInsets.zero,
-                      ),
+                    // --- Only show for Seller/Farmer ---         
                     ListTile(
                       leading: const Icon(Icons.chat, color: Colors.black),
                       title: const Text('Chats'),
