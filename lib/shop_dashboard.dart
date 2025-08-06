@@ -46,8 +46,6 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
   List<Map<String, dynamic>> requests = [];
   List<Map<String, dynamic>> comments = []; // Each: {requestId, userType, text, timestamp}
 
-  final ImagePicker _picker = ImagePicker();
-
   @override
   void initState() {
     super.initState();

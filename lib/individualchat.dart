@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'chats.dart';
+// import 'chats.dart';
 
 class IndividualChatScreen extends StatefulWidget {
   final String sender;
