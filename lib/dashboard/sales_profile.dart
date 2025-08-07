@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
+import 'orders_ui.dart';
 
 // Appwrite setup (reuse your existing client/databases)
 Client client = Client()
@@ -141,12 +142,20 @@ class _SalesProfileScreenState extends State<SalesProfileScreen> {
                           sub: '↓ 5.3% vs Last Month',
                           subColor: Colors.red,
                         ),
-                        _StatCard(
-                          icon: Icons.shopping_cart_outlined,
-                          label: 'ORDERS',
-                          value: '1011',
-                          sub: '↑ 5.3% vs Last Month',
-                          subColor: Color(0xFF175C2B),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const OrdersUi()),
+                            );
+                          },
+                          child: _StatCard(
+                            icon: Icons.shopping_cart_outlined,
+                            label: 'ORDERS',
+                            value: '1011',
+                            sub: '↑ 5.3% vs Last Month',
+                            subColor: Color(0xFF175C2B),
+                          ),
                         ),
                         _StatCard(
                           icon: Icons.mail_outline,
@@ -396,20 +405,28 @@ class _SalesProfileScreenState extends State<SalesProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: const [
-                                Expanded(
-                                  child: Text(
-                                    'TRANSACTIONS',
-                                    style: TextStyle(
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const OrdersUi()),
+                                );
+                              },
+                              child: Row(
+                                children: const [
+                                  Expanded(
+                                    child: Text(
+                                      'TRANSACTIONS',
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Icon(Icons.arrow_forward, color: Color(0xFF175C2B)),
-                              ],
+                                  Icon(Icons.arrow_forward, color: Color(0xFF175C2B)),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _TransactionItem(
