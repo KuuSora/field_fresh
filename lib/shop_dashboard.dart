@@ -11,7 +11,7 @@ import 'package:appwrite/models.dart' as models;
 class ShopDashboard extends StatefulWidget {
   final String userPhone; // <-- Add this line
 
-  const ShopDashboard({super.key, required this.userPhone}); // <-- Add this line
+  const ShopDashboard({super.key, required this.userPhone}); // <-- Update constructor
 
   @override
   State<ShopDashboard> createState() => _ShopDashboardState();
@@ -24,6 +24,7 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
   UserType _userType = UserType.basic;
 
   String userName = 'Guest'; // <-- Add this line
+  String userPhone = ''; // <-- Add this line
 
   final List<Map<String, String>> products = [
     {
@@ -62,16 +63,19 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
 
   Future<void> fetchUserName() async {
     try {
+      // Replace with the correct query to get the current user's document
       final models.DocumentList result = await databases.listDocuments(
         databaseId: '6892ed30001d2e66eb97',
         collectionId: '6892edcd0036f3eae39d',
         queries: [
-          Query.equal('phone', widget.userPhone), // <-- Use the actual phone number
+          // For example, if you have the phone number:
+          Query.equal('phone', 'USER_PHONE_NUMBER'), // Replace with actual phone
         ],
       );
       if (result.documents.isNotEmpty) {
         setState(() {
           userName = result.documents.first.data['name'] ?? 'Guest';
+          userPhone = result.documents.first.data['phone'] ?? ''; // <-- Add this line
         });
       }
     } catch (e) {
@@ -98,13 +102,14 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
       key: _scaffoldKey,
       backgroundColor: Colors.white,
       drawer: ProfileDrawer(
-        userName: userName, // <-- Pass the actual userName from your state
         userType: _userType,
         onUserTypeChanged: (type) {
           setState(() {
             _userType = type;
           });
         },
+        userName: userName, // Provide a suitable user name here
+        userPhone: userPhone, // <-- Pass the user's phone here
       ),
       body: SafeArea(
         child: Column(

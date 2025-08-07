@@ -5,7 +5,6 @@ import 'package:appwrite/models.dart' as models;
 import 'otp_verification_screen.dart';
 import 'otp_success.dart';
 import 'sign_up.dart';
-import 'shop_dashboard.dart';
 
 // Appwrite setup
 Client client = Client()
@@ -122,12 +121,8 @@ class _LoginScreenState extends State<LoginScreen> {
         showPopup = true;
         popup = OTPSuccessWidget(
           onProceed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ShopDashboard(userPhone: phoneController.text.trim()),
-              ),
-            );
+            setState(() => _step = LoginStep.login);
+            // Or navigate if you want
           },
         );
         break;

@@ -10,13 +10,15 @@ enum UserType { basic, premium, farmer }
 class ProfileDrawer extends StatelessWidget {
   final UserType userType;
   final ValueChanged<UserType> onUserTypeChanged;
-  final String userName; // <-- Add this line
+  final String userName;
+  final String userPhone; // <-- Add this line
 
   const ProfileDrawer({
     super.key,
     required this.userType,
     required this.onUserTypeChanged,
-    required this.userName, // <-- Add this line
+    required this.userName,
+    required this.userPhone, // <-- Add this line
   });
 
   @override
@@ -116,7 +118,9 @@ class ProfileDrawer extends StatelessWidget {
                         if (userType == UserType.farmer) {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SalesProfile()),
+                            MaterialPageRoute(
+                              builder: (context) => SalesProfileScreen(userPhone: userPhone), // <-- Pass userPhone
+                            ),
                           );
                         } else {
                           Navigator.push(
