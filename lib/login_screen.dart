@@ -5,7 +5,7 @@ import 'package:appwrite/models.dart' as models;
 import 'otp_verification_screen.dart';
 import 'otp_success.dart';
 import 'sign_up.dart';
-
+import 'shop_dashboard.dart';
 // Appwrite setup
 Client client = Client()
   .setEndpoint('https://nyc.cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
@@ -121,8 +121,12 @@ class _LoginScreenState extends State<LoginScreen> {
         showPopup = true;
         popup = OTPSuccessWidget(
           onProceed: () {
-            setState(() => _step = LoginStep.login);
-            // Or navigate if you want
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ShopDashboard(userPhone: phoneController.text.trim()),
+              ),
+            );
           },
         );
         break;
