@@ -1,12 +1,17 @@
 import 'dart:io';
+import "login_screen.dart";
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'cart.dart';
 import 'widgets/profile_drawer.dart';
 import 'request_info.dart'; // <-- Import the new screen
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as models;
 
 class ShopDashboard extends StatefulWidget {
-  const ShopDashboard({super.key});
+  final String userPhone; // <-- Add this line
+
+  const ShopDashboard({super.key, required this.userPhone}); // <-- Update constructor
 
   @override
   State<ShopDashboard> createState() => _ShopDashboardState();
@@ -17,6 +22,9 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
   int _selectedTab = 0;
   late final PageController _pageController;
   UserType _userType = UserType.basic;
+
+  String userName = 'Guest'; // <-- Add this line
+  String userPhone = ''; // <-- Add this line
 
   final List<Map<String, String>> products = [
     {
@@ -50,12 +58,29 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _selectedTab);
+    fetchUserName(); // <-- Add this line
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  Future<void> fetchUserName() async {
+    try {
+      // Replace with the correct query to get the current user's document
+      final models.DocumentList result = await databases.listDocuments(
+        databaseId: '6892ed30001d2e66eb97',
+        collectionId: '6892edcd0036f3eae39d',
+        queries: [
+          // For example, if you have the phone number:
+          Query.equal('phone', 'USER_PHONE_NUMBER'), // Replace with actual phone
+        ],
+      );
+      if (result.documents.isNotEmpty) {
+        setState(() {
+          userName = result.documents.first.data['name'] ?? 'Guest';
+          userPhone = result.documents.first.data['phone'] ?? ''; // <-- Add this line
+        });
+      }
+    } catch (e) {
+      // Handle error or keep as Guest
+    }
   }
 
   void _addRequest(Map<String, dynamic> request) {
@@ -83,6 +108,8 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
             _userType = type;
           });
         },
+        userName: userName, // Provide a suitable user name here
+        userPhone: userPhone, // <-- Pass the user's phone here
       ),
       body: SafeArea(
         child: Column(

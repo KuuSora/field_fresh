@@ -1,139 +1,496 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as models;
 
-class SalesProfile extends StatefulWidget {
+// Appwrite setup (reuse your existing client/databases)
+Client client = Client()
+  .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+  .setProject('6892ed1d003d8b9dfc27');
+Databases databases = Databases(client);
+
+const String databaseId = '6892ed30001d2e66eb97';
+const String collectionId = '6892edcd0036f3eae39d';
+
+class SalesProfileScreen extends StatefulWidget {
+  final String userPhone;
+  const SalesProfileScreen({super.key, required this.userPhone});
+
   @override
-  _SalesProfileState createState() => _SalesProfileState();
+  State<SalesProfileScreen> createState() => _SalesProfileScreenState();
 }
 
-class _SalesProfileState extends State<SalesProfile> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _SalesProfileScreenState extends State<SalesProfileScreen> {
+  String userName = 'Loading...';
+  int selectedTab = 0; // 0 = Orders, 1 = Customers
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    fetchUserName();
+  }
+
+  Future<void> fetchUserName() async {
+    try {
+      final models.DocumentList result = await databases.listDocuments(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        queries: [
+          Query.equal('phone', widget.userPhone),
+        ],
+      );
+      if (result.documents.isNotEmpty) {
+        setState(() {
+          userName = result.documents.first.data['name'] ?? 'Guest';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        userName = 'Guest';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundImage: AssetImage('assets/profile_image.png'),
-            ),
-            SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Juan Dela Cruz'),
-                Text('Seller', style: TextStyle(fontSize: 12)),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const NotificationDialog(),
-              );
-            },
-          ),
-          IconButton(icon: Icon(Icons.message), onPressed: () {}),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      'TOTAL SALES',
-                      '₱12,345',
-                      '5.3% vs Last Month',
-                      Icons.trending_up,
-                    ),
+      backgroundColor: const Color(0xFFF8F8F8),
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            // Pinned header
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: Colors.white,
+              elevation: 0,
+              expandedHeight: 110,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Padding(
+                  padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Hamburger menu
+                      IconButton(
+                        icon: const Icon(Icons.menu, color: Color(0xFF175C2B)),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                      ),
+                      const SizedBox(width: 8),
+                      // Profile image and name
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: const Color(0xFFD9D9D9),
+                        child: const Icon(Icons.person, size: 32, color: Color(0xFF175C2B)),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                              color: Color(0xFF175C2B),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const Text(
+                            'Seller',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      Icon(Icons.notifications_none, color: Color(0xFF175C2B)),
+                    ],
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'ALL PRODUCTS',
-                      '67',
-                      '',
-                      null,
-                      showArrow: true,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      'TOTAL SHOP VISITORS',
-                      '89',
-                      '5.3% vs Last Month',
-                      Icons.trending_up,
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'ORDERS',
-                      '1011',
-                      '5.3% vs Last Month',
-                      Icons.trending_up,
-                      showArrow: true,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _buildSalesChart(),
-            _buildPieChart(),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(25),
-              ),
-              margin: EdgeInsets.all(16),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  color: Colors.white,
                 ),
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.grey,
-                tabs: [
-                  Tab(text: 'Orders'),
-                  Tab(text: 'Customers'),
-                ],
               ),
+              toolbarHeight: 80,
             ),
-            SizedBox(
-              height: 300,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildOrdersList(),
-                  _buildCustomersList(),
-                ],
+            // Main content
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Stats grid (2x3)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _StatCard(
+                          icon: Icons.monetization_on_outlined,
+                          label: 'TOTAL SALES',
+                          value: '₱12,345',
+                          sub: '↑ 5.3% vs Last Month',
+                          subColor: Color(0xFF175C2B),
+                        ),
+                        _StatCard(
+                          icon: Icons.inventory_2_outlined,
+                          label: 'ALL PRODUCTS',
+                          value: '67',
+                        ),
+                        _StatCard(
+                          icon: Icons.people_outline,
+                          label: 'TOTAL SHOP VISITORS',
+                          value: '89',
+                          sub: '↓ 5.3% vs Last Month',
+                          subColor: Colors.red,
+                        ),
+                        _StatCard(
+                          icon: Icons.shopping_cart_outlined,
+                          label: 'ORDERS',
+                          value: '1011',
+                          sub: '↑ 5.3% vs Last Month',
+                          subColor: Color(0xFF175C2B),
+                        ),
+                        _StatCard(
+                          icon: Icons.mail_outline,
+                          label: 'MESSAGES',
+                          value: '15 NEW',
+                        ),
+                        _StatCard(
+                          icon: Icons.attach_money,
+                          label: 'COMMISSION',
+                          value: '₱30',
+                          sub: '2% per transaction',
+                          subColor: Colors.red,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Sale Summary
+                    const Text(
+                      'SALE SUMMARY',
+                      style: TextStyle(
+                        color: Color(0xFF175C2B),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Monthly Sales Revenue',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Product Sales (₱)',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 60,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEAF1F8),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: Text('Chart Placeholder', style: TextStyle(color: Colors.black38)),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Text('Jan', style: TextStyle(fontSize: 10)),
+                              Text('Feb', style: TextStyle(fontSize: 10)),
+                              Text('Mar', style: TextStyle(fontSize: 10)),
+                              Text('Apr', style: TextStyle(fontSize: 10)),
+                              Text('May', style: TextStyle(fontSize: 10)),
+                              Text('Jun', style: TextStyle(fontSize: 10)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Monthly Shop Visitors
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'MONTHLY SHOP VISITORS',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 60,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEAF1F8),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: Text('Chart Placeholder', style: TextStyle(color: Colors.black38)),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Text('Jan', style: TextStyle(fontSize: 10)),
+                              Text('Feb', style: TextStyle(fontSize: 10)),
+                              Text('Mar', style: TextStyle(fontSize: 10)),
+                              Text('Apr', style: TextStyle(fontSize: 10)),
+                              Text('May', style: TextStyle(fontSize: 10)),
+                              Text('Jun', style: TextStyle(fontSize: 10)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // New Customers
+                    _StatCard(
+                      icon: Icons.people_outline,
+                      label: 'NEW CUSTOMERS',
+                      value: '12',
+                      sub: '↑ 5.3% vs Last Month',
+                      subColor: Color(0xFF175C2B),
+                      isFullWidth: true,
+                    ),
+                    const SizedBox(height: 12),
+                    // Top Selling Products
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'TOP SELLING PRODUCTS',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Center(
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFEAF1F8),
+                              ),
+                              child: const Center(
+                                child: Text('Pie Chart', style: TextStyle(color: Colors.black38, fontSize: 12)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 16,
+                            children: const [
+                              _LegendDot(label: 'Cabbages 28%', color: Color(0xFF175C2B)),
+                              _LegendDot(label: 'Potatoes 20%', color: Color(0xFF7BC67E)),
+                              _LegendDot(label: 'Carrots 22%', color: Color(0xFFB5E48C)),
+                              _LegendDot(label: 'Tomatoes 18%', color: Color(0xFF52B788)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Orders/Customers Tabs
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAF1F8),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => selectedTab = 0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: selectedTab == 0 ? Colors.white : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  child: Center(
+                                    child: Text(
+                                      'Orders',
+                                      style: TextStyle(
+                                        color: selectedTab == 0 ? Color(0xFF175C2B) : Colors.black54,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => selectedTab = 1),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Center(
+                                  child: Text(
+                                    'Customers',
+                                    style: TextStyle(
+                                      color: selectedTab == 1 ? Color(0xFF175C2B) : Colors.black54,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Transaction List or Customers List
+                    if (selectedTab == 0)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: const [
+                                Expanded(
+                                  child: Text(
+                                    'TRANSACTIONS',
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.arrow_forward, color: Color(0xFF175C2B)),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _TransactionItem(
+                              name: 'Maria Santos',
+                              id: '#12847',
+                              status: 'Completed',
+                              statusColor: Color(0xFF175C2B),
+                              products: 'Cabbages 50kg',
+                              price: '₱3,250',
+                              time: '2h ago',
+                            ),
+                            _TransactionItem(
+                              name: 'Berting Dako',
+                              id: '#12846',
+                              status: 'Processing',
+                              statusColor: Color(0xFFB5E48C),
+                              products: 'Carrots 40kg',
+                              price: '₱2,890',
+                              time: '4h ago',
+                            ),
+                            _TransactionItem(
+                              name: 'Rosa Garcia',
+                              id: '#12845',
+                              status: 'Completed',
+                              statusColor: Color(0xFF175C2B),
+                              products: 'Potatoes 20kg, Tomatoes 10kg',
+                              price: '₱5,100',
+                              time: '6h ago',
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (selectedTab == 1)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: const [
+                                Expanded(
+                                  child: Text(
+                                    'CUSTOMERS',
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.arrow_forward, color: Color(0xFF175C2B)),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            // Example customer list
+                            _CustomerItem(
+                              name: 'Maria Santos',
+                              orders: 12,
+                              spent: '₱15,000',
+                            ),
+                            _CustomerItem(
+                              name: 'Berting Dako',
+                              orders: 8,
+                              spent: '₱8,500',
+                            ),
+                            _CustomerItem(
+                              name: 'Rosa Garcia',
+                              orders: 5,
+                              spent: '₱5,100',
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
           ],
@@ -141,151 +498,131 @@ class _SalesProfileState extends State<SalesProfile> with SingleTickerProviderSt
       ),
     );
   }
+}
 
-  Widget _buildStatCard(String title, String value, String subtext, IconData? trendIcon, {bool showArrow = false}) {
-    return Container(
-      padding: EdgeInsets.all(16),
+// --- Helper Widgets ---
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String sub;
+  final Color? subColor;
+  final bool isFullWidth;
+
+  const _StatCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.sub = '',
+    this.subColor,
+    this.isFullWidth = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final card = Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
       ),
+      width: isFullWidth ? double.infinity : (MediaQuery.of(context).size.width / 2) - 20,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: TextStyle(fontSize: 12, color: Colors.grey)),
-              if (showArrow) Icon(Icons.arrow_forward, color: Colors.green),
-            ],
+          Icon(icon, color: const Color(0xFF175C2B), size: 20),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.black54,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          if (subtext.isNotEmpty)
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF175C2B),
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          if (sub.isNotEmpty)
             Row(
               children: [
-                if (trendIcon != null)
-                  Icon(trendIcon, size: 16, color: Colors.green),
-                Text(subtext, style: TextStyle(fontSize: 12, color: Colors.green)),
+                Text(
+                  sub,
+                  style: TextStyle(
+                    color: subColor ?? Colors.black54,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
         ],
       ),
     );
+    return isFullWidth ? card : SizedBox(width: (MediaQuery.of(context).size.width / 2) - 20, child: card);
   }
+}
 
-  Widget _buildSalesChart() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      height: 200,
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: false),
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-                  return Text(months[value.toInt() % months.length]);
-                },
-              ),
-            ),
-            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          ),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: [
-                FlSpot(0, 3),
-                FlSpot(1, 4),
-                FlSpot(2, 3.5),
-                FlSpot(3, 5),
-                FlSpot(4, 4),
-                FlSpot(5, 6),
-              ],
-              isCurved: true,
-              color: Colors.green,
-              barWidth: 2,
-              dotData: FlDotData(show: false),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _LegendDot extends StatelessWidget {
+  final String label;
+  final Color color;
 
-  Widget _buildPieChart() {
-    return Container(
-      height: 200,
-      padding: EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: PieChart(
-              PieChartData(
-                sections: [
-                  PieChartSectionData(value: 28, color: Colors.green[900], title: '28%'),
-                  PieChartSectionData(value: 22, color: Colors.green[700], title: '22%'),
-                  PieChartSectionData(value: 20, color: Colors.green[500], title: '20%'),
-                  PieChartSectionData(value: 18, color: Colors.green[300], title: '18%'),
-                ],
-              ),
-            ),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildLegendItem('Cabbages 28%', Colors.green[900]!),
-              _buildLegendItem('Carrots 22%', Colors.green[700]!),
-              _buildLegendItem('Potatoes 20%', Colors.green[500]!),
-              _buildLegendItem('Tomatoes 18%', Colors.green[300]!),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  const _LegendDot({required this.label, required this.color});
 
-  Widget _buildLegendItem(String text, Color color) {
+  @override
+  Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 12,
-          height: 12,
-          color: color,
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
         ),
-        SizedBox(width: 8),
-        Text(text),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: Colors.black87),
+        ),
       ],
     );
   }
+}
 
-  Widget _buildOrdersList() {
-    return ListView(
-      children: [
-        _buildOrderItem('Maria Santos', '#12347', 'Completed', 'Cabbages 50kg', '₱3,250', '2h ago'),
-        _buildOrderItem('Berting Dako', '#12346', 'Processing', 'Carrots 40kg', '₱2,890', '4h ago'),
-        _buildOrderItem('Rosa Garcia', '#12345', 'Completed', 'Potatoes 20kg\nTomatoes\n10kg', '₱5,100', '6h ago'),
-      ],
-    );
-  }
+class _TransactionItem extends StatelessWidget {
+  final String name;
+  final String id;
+  final String status;
+  final Color statusColor;
+  final String products;
+  final String price;
+  final String time;
 
-  Widget _buildOrderItem(String name, String orderNo, String status, String items, String amount, String time) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
-      ),
+  const _TransactionItem({
+    required this.name,
+    required this.id,
+    required this.status,
+    required this.statusColor,
+    required this.products,
+    required this.price,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Expanded(
@@ -294,266 +631,67 @@ class _SalesProfileState extends State<SalesProfile> with SingleTickerProviderSt
               children: [
                 Row(
                   children: [
-                    Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(width: 8),
-                    Text(orderNo, style: TextStyle(color: Colors.grey)),
-                    SizedBox(width: 8),
+                    Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(width: 8),
+                    Text(id, style: const TextStyle(fontSize: 10, color: Colors.black54)),
+                    const SizedBox(width: 8),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: status == 'Completed' ? Colors.green : Colors.orange,
-                        borderRadius: BorderRadius.circular(12),
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         status,
-                        style: TextStyle(color: Colors.white, fontSize: 12),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 4),
-                Text(items),
+                Text(products, style: const TextStyle(fontSize: 11, color: Colors.black54)),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(amount, style: TextStyle(fontWeight: FontWeight.bold)),
-              Text(time, style: TextStyle(color: Colors.grey)),
+              Text(price, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(time, style: const TextStyle(fontSize: 10, color: Colors.black54)),
             ],
           ),
         ],
       ),
     );
   }
-
-  Widget _buildCustomersList() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'MONTHLY SHOP VISITORS',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(
-                  height: 80,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(show: false),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-                              if (value >= 0 && value < months.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 4.0),
-                                  child: Text(months[value.toInt()], style: TextStyle(fontSize: 10, color: Colors.black54)),
-                                );
-                              }
-                              return const SizedBox.shrink();
-                            },
-                            interval: 1,
-                          ),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      minX: 0,
-                      maxX: 5,
-                      minY: 0,
-                      maxY: 7,
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: [
-                            FlSpot(0, 3),
-                            FlSpot(1, 3.5),
-                            FlSpot(2, 3.2),
-                            FlSpot(3, 4),
-                            FlSpot(4, 4.2),
-                            FlSpot(5, 3.8),
-                          ],
-                          isCurved: true,
-                          color: Colors.green[900],
-                          barWidth: 2,
-                          dotData: FlDotData(show: false),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: Colors.green[900]!.withOpacity(0.12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.green[900],
-                      child: Icon(Icons.person, color: Colors.white, size: 20),
-                      radius: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'NEW CUSTOMERS',
-                          style: TextStyle(fontSize: 12, color: Colors.black54),
-                        ),
-                        Text(
-                          '12',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.arrow_upward, color: Colors.green, size: 16),
-                            Text(
-                              '5.3%',
-                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                          ],
-                        ),
-                        const Text(
-                          'vs Last Month',
-                          style: TextStyle(fontSize: 11, color: Colors.black54),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 }
 
-class NotificationDialog extends StatelessWidget {
-  const NotificationDialog({super.key});
+class _CustomerItem extends StatelessWidget {
+  final String name;
+  final int orders;
+  final String spent;
+
+  const _CustomerItem({
+    required this.name,
+    required this.orders,
+    required this.spent,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        width: 340,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Notifications',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const Divider(),
-            _notifSection('Today', [
-              _notifItem('Order ID #12345678 has been paid by Marie Juana', '1 hour ago', true),
-              _notifItem('Your request offer has been accepted by Elaine Tuon', '6 hours ago', true),
-            ]),
-            _notifSection('Yesterday', [
-              _notifItem('Your request offer has been accepted by Jack Stone', '1 day ago', true),
-              _notifItem('Order ID #12345678 has been paid by Tonton B. Nayaan', '1 day ago', true),
-            ]),
-            _notifSection('Earlier', [
-              _notifItem('Your new seller perks have expired. Your commission rate has increased to 3.5%.', '5 days ago', false),
-            ]),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _notifSection(String title, List<Widget> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        ),
-        ...items,
-      ],
-    );
-  }
-
-  Widget _notifItem(String text, String time, bool isActive) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      decoration: BoxDecoration(
-        color: isActive ? Colors.grey[100] : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(
-            isActive ? Icons.circle : Icons.info_outline,
-            color: isActive ? Colors.green : Colors.grey,
-            size: 16,
-          ),
-          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 13),
-            ),
+            child: Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           ),
+          Text('$orders orders', style: const TextStyle(fontSize: 11, color: Colors.black54)),
           const SizedBox(width: 8),
-          Text(
-            time,
-            style: const TextStyle(fontSize: 11, color: Colors.black54),
-          ),
+          Text(spent, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         ],
       ),
     );
