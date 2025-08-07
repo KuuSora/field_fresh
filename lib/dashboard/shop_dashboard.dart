@@ -1,20 +1,23 @@
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import '../cart/cart_screen.dart';
 import '../profile/profile_drawer.dart';
-import '../cart/request_info_screen.dart'; // <-- Import the new screen
+import '../cart/request_info_screen.dart';
+import 'widgets/shop_top_bar.dart';
+import 'widgets/shop_tab_bar.dart';
+import 'widgets/product_grid.dart';
+import 'widgets/requests_list.dart';
 
 class ShopDashboard extends StatefulWidget {
-  final String userPhone; // <-- Add this line
+  final String userPhone;
   final String userName;
 
-    const ShopDashboard({
+  const ShopDashboard({
     super.key,
     required this.userPhone,
     required this.userName,
   });
-  
+
   @override
   State<ShopDashboard> createState() => _ShopDashboardState();
 }
@@ -52,9 +55,8 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
     // Add more products as needed
   ];
 
-  // --- Temporary requests list for testing ---
   List<Map<String, dynamic>> requests = [];
-  List<Map<String, dynamic>> comments = []; // Each: {requestId, userType, text, timestamp}
+  List<Map<String, dynamic>> comments = [];
 
   @override
   void initState() {
@@ -62,10 +64,7 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
     _pageController = PageController(initialPage: _selectedTab);
     userName = widget.userName;
     userPhone = widget.userPhone;
-    // fetchUserName(); <-- REMOVE this line!
   }
-
-  // Remove fetchUserName() function
 
   void _addRequest(Map<String, dynamic> request) {
     setState(() {
@@ -80,6 +79,49 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
     });
   }
 
+  void _showAddToCartDialog(Map<String, String> product) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AddToCartDialog(
+        name: product['name'] ?? '',
+        shop: 'Mang Kanor Greens',
+      ),
+    );
+  }
+
+  void _showAddRequestDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddRequestDialog(
+        onRequestAdded: (request) async {
+          Navigator.of(context).pop();
+          await showDialog(
+            context: context,
+            builder: (context) => RequestSuccessDialog(
+              onGoToRequests: () {
+                Navigator.of(context).pop();
+                _goToRequestsTab();
+              },
+            ),
+          );
+          _addRequest({
+            ...request,
+            'posted': DateTime.now(),
+          });
+        },
+      ),
+    );
+  }
+
+  void _showSubscribeDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const SubscribeDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,140 +134,40 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
             _userType = type;
           });
         },
-        userName: userName, // Provide a suitable user name here
-        userPhone: userPhone, // <-- Pass the user's phone here
+        userName: userName,
+        userPhone: userPhone,
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // --- Shop Top Bar Widget (inline code) ---
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.menu, color: Colors.black),
-                        onPressed: () {
-                          _scaffoldKey.currentState!.openDrawer(); // <-- Fix: open the drawer using the key
-                        },
-                      ),
-                      Expanded(
-                        child: Container(
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEAF1F8),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 8),
-                              const Icon(Icons.search, color: Colors.black, size: 24),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: 'Search',
-                                    border: InputBorder.none,
-                                    hintStyle: const TextStyle(color: Colors.black38, fontSize: 16),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      IconButton(
-                        icon: Stack(
-                          children: [
-                            const Icon(Icons.shopping_cart, color: Colors.black),
-                            Positioned(
-                              right: 0,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const CartScreen()),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          if (_selectedTab != 0) {
-                            setState(() {
-                              _selectedTab = 0;
-                              _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.ease);
-                            });
-                          }
-                        },
-                        child: Text(
-                          'ON SALE',
-                          style: TextStyle(
-                            color: _selectedTab == 0 ? const Color(0xFF175C2B) : Colors.black38,
-                            fontWeight: _selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      GestureDetector(
-                        onTap: () {
-                          if (_selectedTab != 1) {
-                            if (_userType == UserType.basic) {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: true,
-                                builder: (context) => const SubscribeDialog(),
-                              );
-                            } else {
-                              setState(() {
-                                _selectedTab = 1;
-                                _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.ease);
-                              });
-                            }
-                          }
-                        },
-                        child: Text(
-                          'REQUESTS',
-                          style: TextStyle(
-                            color: _selectedTab == 1 ? const Color(0xFF175C2B) : Colors.black38,
-                            fontWeight: _selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.filter_alt_outlined, color: Color(0xFF175C2B), size: 28),
-                        onPressed: () {
-                          // TODO: Implement filter logic
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            ShopTopBar(
+              scaffoldKey: _scaffoldKey,
+              userName: userName,
+              userPhone: userPhone,
+              onCartPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CartScreen()),
+                );
+              },
+              onSearch: (query) {
+                // TODO: Implement search logic
+              },
             ),
-            // --- Main Content (products/requests) ---
+            ShopTabBar(
+              selectedTab: _selectedTab == 0 ? ShopTab.onSale : ShopTab.requests,
+              onTabSelected: (tab) {
+                setState(() {
+                  _selectedTab = tab == ShopTab.onSale ? 0 : 1;
+                  _pageController.animateToPage(_selectedTab, duration: const Duration(milliseconds: 300), curve: Curves.ease);
+                });
+              },
+              onFilter: () {
+                // TODO: Implement filter logic
+              },
+              isPremium: _userType != UserType.basic,
+              onPremiumTap: _showSubscribeDialog,
+            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -238,253 +180,37 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
                     });
                   },
                   children: [
-                    // --- On Sale Tab Content ---
-                    GridView.builder(
-                      itemCount: products.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.85,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemBuilder: (context, index) {
-                        final product = products[index];
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Color(0xFFEAF1F8),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Image.asset(
-                                    product['image']!,
-                                    fit: BoxFit.contain,
-                                    height: 80,
-                                    width: 80,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        const Icon(Icons.image, size: 60, color: Colors.grey),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                child: Text(
-                                  product['name'] ?? '',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Color(0xFF175C2B),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                child: Text(
-                                  product['price'] ?? '',
-                                  style: const TextStyle(
-                                    color: Colors.black87,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 12, bottom: 8),
-                                  child: CircleAvatar(
-                                    backgroundColor: Color(0xFF175C2B),
-                                    radius: 18,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.shopping_cart, color: Colors.white, size: 18),
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          barrierDismissible: true,
-                                          builder: (context) => AddToCartDialog(
-                                            name: product['name'] ?? '',
-                                            shop: 'Mang Kanor Greens',
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    ProductGrid(
+                      products: products,
+                      onAddToCart: _showAddToCartDialog,
                     ),
-                    // --- Requests Tab Content ---
-                    Stack(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 80),
-                          child: ListView.builder(
-                            itemCount: requests.length,
-                            itemBuilder: (context, index) {
-                              final req = requests[index];
-                              final DateTime posted = req['posted'] ?? DateTime.now();
-                              final Duration diff = DateTime.now().difference(posted);
-                              String timeAgo;
-                              if (diff.inMinutes < 1) {
-                                timeAgo = 'Just now';
-                              } else if (diff.inMinutes < 60) {
-                                timeAgo = '${diff.inMinutes} min ago';
-                              } else if (diff.inHours < 24) {
-                                timeAgo = '${diff.inHours} hr ago';
-                              } else {
-                                timeAgo = '${diff.inDays} days ago';
-                              }
-                              final bool isNew = diff.inMinutes < 5;
-
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => RequestInfoScreen(
-                                        request: req,
-                                        userType: _userType,
-                                        comments: comments.where((c) => c['requestId'] == req['id']).toList(),
-                                        onSendComment: (String text) {
-                                          setState(() {
-                                            comments.add({
-                                              'requestId': req['id'],
-                                              'userType': _userType,
-                                              'text': text,
-                                              'timestamp': DateTime.now(),
-                                            });
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Card(
-                                  elevation: 2,
-                                  margin: const EdgeInsets.symmetric(vertical: 8),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFEAF1F8),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            if (isNew)
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFF175C2B),
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: const Text(
-                                                  'New',
-                                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                                                ),
-                                              ),
-                                            const Spacer(),
-                                            Text(
-                                              timeAgo,
-                                              style: const TextStyle(color: Colors.black54, fontSize: 12),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        if (req['image'] != null)
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Image.file(
-                                              req['image'],
-                                              height: 100,
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                        if (req['image'] != null) const SizedBox(height: 8),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            for (final prod in (req['products'] ?? []))
-                                              Text(
-                                                '${prod['quantity']} ${prod['unit']} ${prod['name']}',
-                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                              ),
-                                          ],
-                                        ),
-                                        if (req['date'] != null && req['time'] != null)
-                                          Text(
-                                            '${req['date']} ${req['time']}',
-                                            style: const TextStyle(color: Colors.black54, fontSize: 13),
-                                          ),
-                                        if (req['description'] != null && req['description'].isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 4),
-                                            child: Text(
-                                              req['description'],
-                                              style: const TextStyle(fontSize: 13),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        // Green Add Button
-                        if (_userType != UserType.farmer)
-                          Positioned(
-                            right: 24,
-                            bottom: 24,
-                            child: FloatingActionButton(
-                              backgroundColor: Color(0xFF175C2B),
-                              child: const Icon(Icons.add, color: Colors.white, size: 32),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AddRequestDialog(
-                                    onRequestAdded: (request) async {
-                                      Navigator.of(context).pop();
-                                      await showDialog(
-                                        context: context,
-                                        builder: (context) => RequestSuccessDialog(
-                                          onGoToRequests: () {
-                                            Navigator.of(context).pop();
-                                            _goToRequestsTab();
-                                          },
-                                        ),
-                                      );
-                                      _addRequest({
-                                        ...request,
-                                        'posted': DateTime.now(),
-                                      });
-                                    },
-                                  ),
-                                );
+                    RequestsList(
+                      requests: requests,
+                      comments: comments,
+                      userType: _userType,
+                      onRequestTap: (req) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RequestInfoScreen(
+                              request: req,
+                              userType: _userType,
+                              comments: comments.where((c) => c['requestId'] == req['id']).toList(),
+                              onSendComment: (String text) {
+                                setState(() {
+                                  comments.add({
+                                    'requestId': req['id'],
+                                    'userType': _userType,
+                                    'text': text,
+                                    'timestamp': DateTime.now(),
+                                  });
+                                });
                               },
                             ),
                           ),
-                      ],
+                        );
+                      },
+                      onAddRequest: _showAddRequestDialog,
                     ),
                   ],
                 ),
@@ -885,14 +611,8 @@ class _AddRequestDialogState extends State<AddRequestDialog> {
   final TextEditingController descriptionController = TextEditingController();
   File? imageFile;
 
-  Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        imageFile = File(picked.path);
-      });
-    }
-  }
+
+  // TODO: Move image picking logic to AddRequestDialog widget file and import image_picker there.
 
   void _showUnitSelector(int index) async {
     final selected = await showDialog<String>(
@@ -1134,7 +854,7 @@ class _AddRequestDialogState extends State<AddRequestDialog> {
                     const Text('Attachments', style: TextStyle(fontSize: 14)),
                     const SizedBox(height: 4),
                     GestureDetector(
-                      onTap: _pickImage,
+                      // onTap: _pickImage, // TODO: Move image picking logic to AddRequestDialog widget file
                       child: Container(
                         width: 40,
                         height: 40,
