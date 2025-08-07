@@ -6,6 +6,7 @@ import 'otp_verification_screen.dart';
 import 'otp_success.dart';
 import 'sign_up.dart';
 import 'shop_dashboard.dart';
+
 // Appwrite setup
 Client client = Client()
   .setEndpoint('https://nyc.cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
@@ -33,6 +34,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
 
   bool isLoading = false;
+
+  String _userName = '';
 
   void showMessageDialog(String title, String content, {bool success = false}) {
     showDialog(
@@ -91,11 +94,18 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result.documents.isEmpty) {
         showMessageDialog("Login Failed", "Invalid credentials.");
       } else {
-        // Instead of navigating, set the step to OTP
+        // Get the user's name from the document
+        final userDoc = result.documents.first;
+        final userName = userDoc.data['name'] ?? '';
+
+        // Pass userName to ShopDashboard when navigating
         setState(() {
           _step = LoginStep.otp;
         });
-        // Optionally show a dialog or message if you want
+
+        // Store userName for later use if needed
+        // You can use a variable in your state to hold it
+        _userName = userName;
       }
     } on AppwriteException catch (e) {
       showMessageDialog("Error", e.message ?? "Unknown error.");
@@ -124,7 +134,10 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => ShopDashboard(userPhone: phoneController.text.trim()),
+                builder: (_) => ShopDashboard(
+                  userPhone: phoneController.text.trim(),
+                  userName: _userName, // Pass the name here
+                ),
               ),
             );
           },
