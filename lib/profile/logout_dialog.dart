@@ -48,7 +48,13 @@ class LogoutDialog extends StatelessWidget {
                   Navigator.of(context).pop(); // Close drawer
                   Navigator.of(context).pushReplacementNamed('/'); // Go to SplashScreen
                 },
-                child: const Text('LOG OUT', style: TextStyle(fontSize: 16)),
+                child: const Text(
+                  'LOG OUT',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white, // <-- Add this line
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 12),
