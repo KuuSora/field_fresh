@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'widgets/profile_drawer.dart';
+import '../profile/profile_drawer.dart';
 
 class RequestInfoScreen extends StatefulWidget {
   final Map<String, dynamic> request;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // import 'shop_dashboard.dart';
-import 'individualchat.dart';
+import '../chat/individual_chat_screen.dart';
 
 class ChatsScreen extends StatefulWidget {
   const ChatsScreen({super.key});

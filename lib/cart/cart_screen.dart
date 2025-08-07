@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'chats.dart';
+import '../chat/chat_list_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});

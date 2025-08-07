@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'cart.dart';
-import 'chats.dart';
-import 'editaccount.dart';
+import '../cart/cart_screen.dart';
+import '../chat/chat_list_screen.dart';
+import 'edit_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

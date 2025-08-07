@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../profile.dart';
-import '../cart.dart';
-import '../chats.dart';
+import 'profile_screen.dart';
+import '../cart/cart_screen.dart';
+import '../chat/chat_list_screen.dart';
 import 'logout_dialog.dart';
-import '../sales_profile.dart';
+import '../dashboard/sales_profile.dart';
 
 enum UserType { basic, premium, farmer }
 
