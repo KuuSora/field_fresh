@@ -1,12 +1,9 @@
 import 'dart:io';
-import "login_screen.dart";
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'cart.dart';
 import 'widgets/profile_drawer.dart';
 import 'request_info.dart'; // <-- Import the new screen
-import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart' as models;
 
 class ShopDashboard extends StatefulWidget {
   final String userPhone; // <-- Add this line
