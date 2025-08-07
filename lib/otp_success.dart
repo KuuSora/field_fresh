@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'shop_dashboard.dart';
 
-class OTPSuccessDialog extends StatelessWidget {
-  const OTPSuccessDialog({super.key});
+class OTPSuccessWidget extends StatelessWidget {
+  final VoidCallback onProceed;
+
+  const OTPSuccessWidget({super.key, required this.onProceed});
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(32),
+    return Center(
       child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24),
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -39,26 +39,22 @@ class OTPSuccessDialog extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF175C2B),
+                  backgroundColor: const Color(0xFF175C2B),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close success popup
-                  Navigator.of(context).pop(); // Close OTP popup
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ShopDashboard()),
-                  );
-                },
-                child: const Text('PROCEED',style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white, 
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Roboto', 
-                    ),),
+                onPressed: onProceed,
+                child: const Text(
+                  'PROCEED',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
               ),
             ),
           ],

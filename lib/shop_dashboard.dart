@@ -1,12 +1,17 @@
 import 'dart:io';
+import "login_screen.dart";
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'cart.dart';
 import 'widgets/profile_drawer.dart';
 import 'request_info.dart'; // <-- Import the new screen
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as models;
 
 class ShopDashboard extends StatefulWidget {
-  const ShopDashboard({super.key});
+  final String userPhone; // <-- Add this line
+
+  const ShopDashboard({super.key, required this.userPhone}); // <-- Add this line
 
   @override
   State<ShopDashboard> createState() => _ShopDashboardState();
@@ -17,6 +22,8 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
   int _selectedTab = 0;
   late final PageController _pageController;
   UserType _userType = UserType.basic;
+
+  String userName = 'Guest'; // <-- Add this line
 
   final List<Map<String, String>> products = [
     {
@@ -50,12 +57,26 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _selectedTab);
+    fetchUserName(); // <-- Add this line
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  Future<void> fetchUserName() async {
+    try {
+      final models.DocumentList result = await databases.listDocuments(
+        databaseId: '6892ed30001d2e66eb97',
+        collectionId: '6892edcd0036f3eae39d',
+        queries: [
+          Query.equal('phone', widget.userPhone), // <-- Use the actual phone number
+        ],
+      );
+      if (result.documents.isNotEmpty) {
+        setState(() {
+          userName = result.documents.first.data['name'] ?? 'Guest';
+        });
+      }
+    } catch (e) {
+      // Handle error or keep as Guest
+    }
   }
 
   void _addRequest(Map<String, dynamic> request) {
@@ -77,6 +98,7 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
       key: _scaffoldKey,
       backgroundColor: Colors.white,
       drawer: ProfileDrawer(
+        userName: userName, // <-- Pass the actual userName from your state
         userType: _userType,
         onUserTypeChanged: (type) {
           setState(() {

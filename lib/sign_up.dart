@@ -6,12 +6,12 @@ import 'login_screen.dart';
 // Appwrite setup
 Client client = Client()
   .setEndpoint('https://nyc.cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
-  .setProject('6892f17b0031b2ada23a'); // Replace with your project ID
+  .setProject('6892ed1d003d8b9dfc27'); // Replace with your project ID
 
 Databases databases = Databases(client);
 
-const String databaseId = '689347a20005460b2cd4';
-const String collectionId = '68934809003656b8aa7b';
+const String databaseId = '6892ed30001d2e66eb97';
+const String collectionId = '6892edcd0036f3eae39d';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});

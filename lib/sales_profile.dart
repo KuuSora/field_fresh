@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class SalesProfile extends StatefulWidget {
+  const SalesProfile({super.key});
+
   @override
   _SalesProfileState createState() => _SalesProfileState();
 }
@@ -415,8 +417,8 @@ class _SalesProfileState extends State<SalesProfile> with SingleTickerProviderSt
                   children: [
                     CircleAvatar(
                       backgroundColor: Colors.green[900],
-                      child: Icon(Icons.person, color: Colors.white, size: 20),
                       radius: 16,
+                      child: Icon(Icons.person, color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 8),
                     Column(

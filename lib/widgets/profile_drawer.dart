@@ -10,11 +10,13 @@ enum UserType { basic, premium, farmer }
 class ProfileDrawer extends StatelessWidget {
   final UserType userType;
   final ValueChanged<UserType> onUserTypeChanged;
+  final String userName; // <-- Add this line
 
   const ProfileDrawer({
     super.key,
     required this.userType,
     required this.onUserTypeChanged,
+    required this.userName, // <-- Add this line
   });
 
   @override
@@ -63,9 +65,9 @@ class ProfileDrawer extends StatelessWidget {
                       const SizedBox(height: 12),
                       Column(
                         children: [
-                          const Text(
-                            'Juan Dela Cruz',
-                            style: TextStyle(
+                          Text(
+                            userName, // <-- Use the userName here
+                            style: const TextStyle(
                               color: Color(0xFF175C2B),
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
