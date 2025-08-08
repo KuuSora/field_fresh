@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-
 import '../../profile/profile_drawer.dart' show UserType;
 
 class RequestsList extends StatelessWidget {
@@ -25,8 +23,9 @@ class RequestsList extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 80),
-          child: ListView.builder(
+          child: ListView.separated(
             itemCount: requests.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 4),
             itemBuilder: (context, index) {
               final req = requests[index];
               final DateTime posted = req['posted'] ?? DateTime.now();

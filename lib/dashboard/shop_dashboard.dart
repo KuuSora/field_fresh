@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../cart/cart_screen.dart';
+import '../cart/produce_info_screen.dart';
 import '../profile/profile_drawer.dart';
 import '../cart/request_info_screen.dart';
 import 'widgets/shop_top_bar.dart';
@@ -8,10 +8,13 @@ import 'widgets/shop_tab_bar.dart';
 import 'widgets/product_grid.dart';
 import 'widgets/requests_list.dart';
 import 'dialogs/subscribe_dialog.dart';
-import 'dialogs/subscription_perks_dialog.dart';
 import 'dialogs/add_to_cart_dialog.dart';
 import 'dialogs/add_request_dialog.dart';
 import 'dialogs/request_success_dialog.dart';
+import 'widgets/dashboard_overview_row.dart';
+import 'widgets/trends_card.dart';
+
+import 'widgets/home_tab.dart';
 
 class ShopDashboard extends StatefulWidget {
   final String userPhone;
@@ -27,7 +30,7 @@ class ShopDashboard extends StatefulWidget {
   State<ShopDashboard> createState() => _ShopDashboardState();
 }
 
-class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProviderStateMixin {
+class _ShopDashboardState extends State<ShopDashboard> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedTab = 0;
   late final PageController _pageController;
@@ -35,6 +38,9 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
 
   late String userName;
   late String userPhone;
+
+
+  late ShopTab selectedTab;
 
   final List<Map<String, String>> products = [
     {
@@ -69,6 +75,14 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
     _pageController = PageController(initialPage: _selectedTab);
     userName = widget.userName;
     userPhone = widget.userPhone;
+    selectedTab = _userType == UserType.farmer ? ShopTab.home : ShopTab.onSale;
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+    
   }
 
   void _addRequest(Map<String, dynamic> request) {
@@ -129,6 +143,12 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    // Determine which tabs to show
+    final isFarmer = _userType == UserType.farmer;
+    final availableTabs = isFarmer
+        ? [ShopTab.home, ShopTab.onSale, ShopTab.requests]
+        : [ShopTab.onSale, ShopTab.requests];
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
@@ -137,6 +157,8 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
         onUserTypeChanged: (type) {
           setState(() {
             _userType = type;
+            // Optionally reset tab to home or onSale
+            selectedTab = type == UserType.farmer ? ShopTab.home : ShopTab.onSale;
           });
         },
         userName: userName,
@@ -159,66 +181,89 @@ class _ShopDashboardState extends State<ShopDashboard> with SingleTickerProvider
                 // TODO: Implement search logic
               },
             ),
+            // Custom ShopTabBar
             ShopTabBar(
-              selectedTab: _selectedTab == 0 ? ShopTab.onSale : ShopTab.requests,
+              selectedTab: selectedTab,
               onTabSelected: (tab) {
                 setState(() {
-                  _selectedTab = tab == ShopTab.onSale ? 0 : 1;
-                  _pageController.animateToPage(_selectedTab, duration: const Duration(milliseconds: 300), curve: Curves.ease);
+                  selectedTab = tab;
                 });
               },
               onFilter: () {
                 // TODO: Implement filter logic
               },
-              isPremium: _userType != UserType.basic,
+              isPremium: _userType == UserType.farmer || _userType == UserType.premium,
               onPremiumTap: _showSubscribeDialog,
+              showHome: _userType == UserType.farmer, // <-- only show HOME for farmer
             ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: PageView(
-                  controller: _pageController,
-                  physics: const BouncingScrollPhysics(),
-                  onPageChanged: (index) {
-                    setState(() {
-                      _selectedTab = index;
-                    });
-                  },
-                  children: [
-                    ProductGrid(
+              child: Builder(
+                builder: (context) {
+                  // Only show tabs available for this user type
+                  if (selectedTab == ShopTab.home && isFarmer) {
+                    return HomeTab(
+                      productCount: products.length,
+                      onAddProduct: () {
+                        // TODO: Add new product logic
+                      },
+                      onDashboardTap: () {
+                        Navigator.pushNamed(context, '/sales_profile');
+                      },
+                      onReadMore: () {
+                        // TODO: Read more logic
+                      },
+                    );
+                  } else if (selectedTab == ShopTab.onSale) {
+                    return ProductGrid(
                       products: products,
                       onAddToCart: _showAddToCartDialog,
-                    ),
-                    RequestsList(
+                      onProductTap: (product) {
+                        // Show product info as a modal bottom sheet
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => ProduceInfoSheet(
+                            name: product['name'] ?? '',
+                            image: product['image'] ?? '',
+                            shop: product['shop'] ?? '',
+                            details: product['details'] ?? '',
+                            price: product['price'] ?? '',
+                            rating: double.tryParse(product['rating'] ?? '0') ?? 0,
+                          ),
+                        );
+                      },
+                      onCartIconTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const CartScreen()),
+                        );
+                      },
+                    );
+                  } else if (selectedTab == ShopTab.requests) {
+                    return RequestsList(
                       requests: requests,
                       comments: comments,
                       userType: _userType,
-                      onRequestTap: (req) {
+                      onAddRequest: _showAddRequestDialog,
+                      onRequestTap: (request) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => RequestInfoScreen(
-                              request: req,
+                            builder: (_) => RequestInfoScreen(
+                              request: request,
                               userType: _userType,
-                              comments: comments.where((c) => c['requestId'] == req['id']).toList(),
-                              onSendComment: (String text) {
-                                setState(() {
-                                  comments.add({
-                                    'requestId': req['id'],
-                                    'userType': _userType,
-                                    'text': text,
-                                    'timestamp': DateTime.now(),
-                                  });
-                                });
-                              },
+                              comments: comments,
                             ),
                           ),
                         );
                       },
-                      onAddRequest: _showAddRequestDialog,
-                    ),
-                  ],
-                ),
+                    );
+                  } else {
+                    // Fallback (should not happen)
+                    return const SizedBox.shrink();
+                  }
+                },
               ),
             ),
           ],

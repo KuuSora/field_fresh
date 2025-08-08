@@ -4,6 +4,7 @@ import '../cart/cart_screen.dart';
 import '../chat/chat_list_screen.dart';
 import 'logout_dialog.dart';
 import '../dashboard/sales_profile.dart';
+import 'premium_user_profile.dart'; // <-- Add this import
 
 enum UserType { basic, premium, farmer }
 
@@ -119,7 +120,17 @@ class ProfileDrawer extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SalesProfileScreen(userPhone: userPhone), // <-- Pass userPhone
+                              builder: (context) => SalesProfileScreen(userPhone: userPhone),
+                            ),
+                          );
+                        } else if (userType == UserType.premium) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PremiumUserProfileScreen(
+                                userName: userName,
+                                userPhone: userPhone,
+                              ),
                             ),
                           );
                         } else {
@@ -143,7 +154,7 @@ class ProfileDrawer extends StatelessWidget {
                       },
                       contentPadding: EdgeInsets.zero,
                     ),
-                    // --- Only show for Seller/Farmer ---         
+                    // --- Only show for Seller/Farmer ---
                     ListTile(
                       leading: const Icon(Icons.chat, color: Colors.black),
                       title: const Text('Chats'),

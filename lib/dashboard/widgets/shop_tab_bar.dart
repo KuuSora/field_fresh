@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum ShopTab { onSale, requests }
+enum ShopTab { home, onSale, requests }
 
 class ShopTabBar extends StatelessWidget {
   final ShopTab selectedTab;
@@ -8,6 +8,7 @@ class ShopTabBar extends StatelessWidget {
   final VoidCallback onFilter;
   final bool isPremium;
   final VoidCallback onPremiumTap;
+  final bool showHome; // <-- add this
 
   const ShopTabBar({
     super.key,
@@ -16,6 +17,7 @@ class ShopTabBar extends StatelessWidget {
     required this.onFilter,
     required this.isPremium,
     required this.onPremiumTap,
+    this.showHome = true, // <-- default true
   });
 
   @override
@@ -24,6 +26,19 @@ class ShopTabBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
+          if (showHome)
+            GestureDetector(
+              onTap: () => onTabSelected(ShopTab.home),
+              child: Text(
+                'HOME',
+                style: TextStyle(
+                  color: selectedTab == ShopTab.home ? const Color(0xFF175C2B) : Colors.black38,
+                  fontWeight: selectedTab == ShopTab.home ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          if (showHome) const SizedBox(width: 16),
           GestureDetector(
             onTap: () => onTabSelected(ShopTab.onSale),
             child: Text(
