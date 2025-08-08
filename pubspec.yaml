@@ -71,6 +71,10 @@ flutter:
   assets:
     - assets/fieldfresh_logo.png
     - assets/rc_map.png
+    - assets/cabbage.jpg
+    - assets/carrots.jpg
+    - assets/potatoes.jpg
+    - assets/tomatoes.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

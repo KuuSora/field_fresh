@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dashboard_overview_row.dart';
 import 'trends_card.dart';
+import 'add_new_product.dart';
 
 class HomeTab extends StatelessWidget {
   final int productCount;
@@ -26,7 +27,12 @@ class HomeTab extends StatelessWidget {
           // Dashboard Overview Row
           DashboardOverviewRow(
             productCount: productCount,
-            onAddProduct: onAddProduct,
+            onAddProduct: () {
+              showDialog(
+                context: context,
+                builder: (_) => const AddNewProductScreen(),
+              );
+            },
             onDashboardTap: onDashboardTap,
           ),
           // Trends Card

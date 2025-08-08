@@ -3,6 +3,7 @@ import '../cart/cart_screen.dart';
 import '../cart/produce_info_screen.dart';
 import '../profile/profile_drawer.dart';
 import '../cart/request_info_screen.dart';
+import '../cart/product_listing_screen.dart';
 import 'widgets/shop_top_bar.dart';
 import 'widgets/shop_tab_bar.dart';
 import 'widgets/product_grid.dart';
@@ -42,28 +43,27 @@ class _ShopDashboardState extends State<ShopDashboard> {
 
   late ShopTab selectedTab;
 
-  final List<Map<String, String>> products = [
-    {
-      'name': 'Cabbage',
-      'price': '₱80 per kilo',
-      'image': 'assets/cabbage.png',
-    },
+  final products = [
     {
       'name': 'Carrots',
-      'price': 'XX per kilo',
-      'image': 'assets/carrots.png',
+      'image': 'assets/carrots.jpg',
+      'price': '₱50',
+    },
+    {
+      'name': 'Cabbage',
+      'image': 'assets/cabbage.jpg',
+      'price': '₱40',
     },
     {
       'name': 'Tomatoes',
-      'price': 'XX per kilo',
-      'image': 'assets/tomatoes.png',
+      'image': 'assets/tomatoes.jpg',
+      'price': '₱60',
     },
     {
       'name': 'Potatoes',
-      'price': 'XX per kilo',
-      'image': 'assets/potatoes.png',
+      'image': 'assets/potatoes.jpg',
+      'price': '₱55',
     },
-    // Add more products as needed
   ];
 
   List<Map<String, dynamic>> requests = [];
@@ -204,13 +204,16 @@ class _ShopDashboardState extends State<ShopDashboard> {
                     return HomeTab(
                       productCount: products.length,
                       onAddProduct: () {
-                        // TODO: Add new product logic
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ProductListingScreen()),
+                        );
                       },
                       onDashboardTap: () {
-                        Navigator.pushNamed(context, '/sales_profile');
+                        // Your dashboard tap logic
                       },
                       onReadMore: () {
-                        // TODO: Read more logic
+                        // Your read more logic
                       },
                     );
                   } else if (selectedTab == ShopTab.onSale) {

@@ -4,7 +4,7 @@ class ProductGrid extends StatelessWidget {
   final List<Map<String, String>> products;
   final void Function(Map<String, String> product) onAddToCart;
   final void Function(Map<String, String> product)? onProductTap;
-  final void Function()? onCartIconTap; // <-- add this
+  final void Function()? onCartIconTap;
 
   const ProductGrid({
     super.key,
@@ -30,7 +30,6 @@ class ProductGrid extends StatelessWidget {
           onTap: onProductTap != null ? () => onProductTap!(product) : null,
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF1F8),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -40,55 +39,96 @@ class ProductGrid extends StatelessWidget {
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                Expanded(
-                  child: Center(
+                // Background image
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.asset(
                       product['image'] ?? '',
-                      fit: BoxFit.contain,
-                      height: 80,
-                      width: 80,
+                      fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.image, size: 60, color: Colors.grey),
+                          Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image, size: 60, color: Colors.grey),
+                          ),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    product['name'] ?? '',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF175C2B),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    product['price'] ?? '',
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 12, bottom: 8),
-                    child: CircleAvatar(
-                      backgroundColor: const Color(0xFF175C2B),
-                      radius: 18,
-                      child: IconButton(
-                        icon: const Icon(Icons.shopping_cart, color: Colors.white, size: 18),
-                        onPressed: onCartIconTap, // <-- go to cart screen
+                // Foreground: gradient overlay for readability
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.55),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.7],
                       ),
                     ),
+                  ),
+                ),
+                // Foreground: product info and cart icon
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  bottom: 16,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              product['name'] ?? '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black45,
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              product['price'] ?? '',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black45,
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      CircleAvatar(
+                        backgroundColor: const Color(0xFF175C2B),
+                        radius: 18,
+                        child: IconButton(
+                          icon: const Icon(Icons.shopping_cart, color: Colors.white, size: 18),
+                          onPressed: onCartIconTap,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../dashboard/widgets/add_new_product.dart';
 
 class ProductListingScreen extends StatelessWidget {
   const ProductListingScreen({super.key});
@@ -129,7 +130,12 @@ class ProductListingScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => const AddNewProductScreen(),
+                    );
+                  },
                   child: const Text(
                     '+ Add New Product',
                     style: TextStyle(
