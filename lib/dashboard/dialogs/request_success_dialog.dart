@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'subscribe_dialog.dart';
-import 'subscription_perks_dialog.dart';
-import 'add_to_cart_dialog.dart';
-import 'add_request_dialog.dart';
 
 class RequestSuccessDialog extends StatelessWidget {
   final VoidCallback onGoToRequests;
