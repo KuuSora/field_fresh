@@ -24,9 +24,11 @@ class SubscriptionPerksDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'BASIC',
@@ -38,16 +40,20 @@ class SubscriptionPerksDialog extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Container(
+                        width: double.infinity,
+                        constraints: const BoxConstraints(minHeight: 120),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEAF1F8),
+                          color: Color(0xFFEAF1F8),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                         child: const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('• Basic voucher discount', style: TextStyle(color: Colors.black87, fontSize: 15)),
+                            SizedBox(height: 4),
                             Text('• Limited purchase only per produce', style: TextStyle(color: Colors.black87, fontSize: 15)),
+                            SizedBox(height: 4),
                             Text('• Can use the search function', style: TextStyle(color: Colors.black87, fontSize: 15)),
                           ],
                         ),
@@ -55,8 +61,10 @@ class SubscriptionPerksDialog extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       const Text(
                         'PREMIUM',
@@ -68,17 +76,22 @@ class SubscriptionPerksDialog extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Container(
+                        width: double.infinity,
+                        constraints: const BoxConstraints(minHeight: 120),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEAF1F8),
+                          color: Color(0xFFEAF1F8),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('• Advanced and exclusive vouchers', style: TextStyle(color: Colors.black87, fontSize: 15)),
+                            SizedBox(height: 4),
                             Text('• Unlimited purchase of produce', style: TextStyle(color: Colors.black87, fontSize: 15)),
+                            SizedBox(height: 4),
                             Text('• Make requests in advance to buy produce and receive notifications when requests are available', style: TextStyle(color:Colors.black87, fontSize: 15)),
+                            SizedBox(height: 4),
                             Text('• Can use the search function to identify the top-rated and top-selling sellers and products', style: TextStyle(color: Colors.black87, fontSize: 15)),
                           ],
                         ),
